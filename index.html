@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk City Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add fog for a cyberpunk atmosphere
+        scene.fog = new THREE.FogExp2(0x1a1a1a, 0.02);
+
+        // Camera position
+        camera.position.set(0, 10, 30);
+        camera.lookAt(0, 0, 0);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft ambient light
+        scene.add(ambientLight);
+
+        // Add a directional light to simulate the sunset
+        const directionalLight = new THREE.DirectionalLight(0xff4500, 1); // Orange sunset light
+        directionalLight.position.set(0, 10, 20);
+        scene.add(directionalLight);
+
+        // Ground (wet street)
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x1c2526, roughness: 0.1, metalness: 0.8 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+
+        // Create buildings
+        const buildingMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.7 });
+        const neonMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 2 });
+
+        function createBuilding(x, z, width, height, depth) {
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const building = new THREE.Mesh(geometry, buildingMaterial);
+            building.position.set(x, height / 2, z);
+            scene.add(building);
+
+            // Add neon lights to the building
+            const neonGeometry = new THREE.BoxGeometry(width * 0.8, 0.5, 0.5);
+            const neon = new THREE.Mesh(neonGeometry, neonMaterial);
+            neon.position.set(x, height + 0.5, z);
+            scene.add(neon);
+        }
+
+        // Generate a grid of buildings
+        for (let x = -40; x <= 40; x += 10) {
+            for (let z = -40; z <= 40; z += 10) {
+                if (Math.abs(x) > 5 || Math.abs(z) > 5) { // Leave a gap in the center for the street
+                    const height = Math.random() * 20 + 10;
+                    createBuilding(x, z, 5, height, 5);
+                }
+            }
+        }
+
+        // Add a glowing holographic effect
+        const hologramGeometry = new THREE.SphereGeometry(2, 32, 32);
+        const hologramMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true, transparent: true, opacity: 0.5 });
+        const hologram = new THREE.Mesh(hologramGeometry, hologramMaterial);
+        hologram.position.set(0, 10, 0);
+        scene.add(hologram);
+
+        // Add a point light for the hologram
+        const hologramLight = new THREE.PointLight(0xff00ff, 2, 50);
+        hologramLight.position.set(0, 10, 0);
+        scene.add(hologramLight);
+
+        // Skybox (sunset gradient)
+        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff4500,
+            side: THREE.BackSide,
+            opacity: 0.8,
+            transparent: true
+        });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the hologram for a dynamic effect
+            hologram.rotation.y += 0.01;
+
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
